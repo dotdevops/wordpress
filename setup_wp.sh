@@ -10,6 +10,7 @@ PHP_VER="5.3.6"
 MHASH_VER="0.9.9.9"
 MCRYPT_VER="2.6.8"
 WWW_ROOT=/home/nginx/html/default
+DATE=$(date +%Y_%m_%d-%H%M%S)
 
 if [ ! -f /etc/redhat-release ] ; then
   echo "This only work on RedHat & CentOS systems"
@@ -62,8 +63,6 @@ if [ ! -d ${WWW_ROOT} ] ; then
   chown -R nginx:nginx ${WWW_ROOT}
 fi
 
-# Change IP tables rules & update SELinux
-
 # Install Varnish
 cd $SOFTWARE_BASE
 wget http://repo.varnish-cache.org/source/varnish-${VARNISH_VER}.tar.gz
@@ -111,7 +110,13 @@ fi
 ./configure ${CONFIGURE_OPTS}
 make && make install
 mkdir /etc/php
+if [ -f /etc/php/php.ini ] ; then
+  cp  /etc/php/php.ini /etc/php/php.ini-${DATE}
+fi
 cp php.ini-production /etc/php/php.ini
+if [ -f /etc/php/php-fpm.conf ] ; then
+  cp /etc/php/php-fpm.conf /etc/php/php-fpm.conf-${DATE}
+fi
 cp /usr/local/php/etc/php-fpm.conf.default /etc/php/php-fpm.conf
 cp /root/software/php-5.3.6/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
 chmod 750 /etc/init.d/php-fpm
@@ -122,4 +127,13 @@ mkdir -p /var/log/php
 cd ${WWW_ROOT}
 wget http://wordpress.org/latest.tar.gz
 tar -xzvf latest.tar.gz
+
+cat <<EOF
+ 
+ You will need to update /etc/php/php-fpm.conf with the correct user & log location
+ Also, don't forget to load your robots.txt
+ You can also download mine if needed 
+ wget "https://github.com/dotdevops/wordpress/blob/master/robots.txt"
+
+EOF
 
